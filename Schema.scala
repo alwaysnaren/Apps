@@ -11,6 +11,17 @@ import org.apache.log4j.Logger
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{DataTypes, StructType}
+import java.io.ByteArrayOutputStream
+import com.mastercard.ess.schema.SchemaRegistry
+import org.apache.avro.generic.{GenericData, GenericRecord}
+import org.apache.avro.io.EncoderFactory
+import org.apache.avro.specific.SpecificDatumWriter
+import org.apache.spark.sql.Row
+
+import scala.collection.JavaConversions._
+import scala.reflect.ClassTag
+import scala.reflect.runtime.universe._
+import scala.reflect._
 
 import scala.collection.mutable.Map
 
