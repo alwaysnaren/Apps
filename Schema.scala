@@ -108,5 +108,49 @@ object SchemaRegistry {
     myAvroRecordConverter.apply(record)
   }
 
+    /**
+   * mapToClass converts a map into a class of type T. Arguments passed to the map must have the appropriate
+   * constructor arguments with the correctly named map keys that correspond to those argument names. This will
+   * not work well with classes containing multiple constructors TODO add that support if needed
+   * @param params
+   * @tparam T
+   * @return
+   */
+  def mapToClass[T: TypeTag: ClassTag](params: scala.collection.immutable.Map[String,Any]) : Any = {
+
+      val runtime: Mirror = runtimeMirror(classTag[T].runtimeClass.getClassLoader)
+      val classSymbol: ClassSymbol = typeOf[T].typeSymbol.asClass
+      val mirror: ClassMirror = runtime.reflectClass(classSymbol)
+
+      val constructor: MethodSymbol = typeOf[T].decl(termNames.CONSTRUCTOR).asMethod
+      val constructorMirror = mirror.reflectConstructor(constructor)
+
+      val arguments = constructor.paramLists.flatten.map((arg:Symbol) => {
+
+      val paramName = arg.name.toString
+      val result = params.get(paramName)
+
+      if(null != result || arg.typeSignature <:< typeOf[Option[Any]]) {
+
+        if(result.isInstanceOf[Option[Any]]) {
+          if(!result.isEmpty) {
+            result.asInstanceOf[Option[Any]].get
+          }else {
+            null
+          }
+
+        } else {
+          result
+        }
+
+      } else {
+        throw new IllegalArgumentException("Could not find map value for field " + paramName + " in class " + classSymbol.name)
+      }
+
+    })
+
+    constructorMirror(arguments:_*).asInstanceOf[T]
+
+  }
 
 }
